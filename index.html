@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Central de Atendimento</title>
+  <!-- Fonte Nunito -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,600;1,600&amp;display=swap" rel="stylesheet">
+  <!-- Link para o CSS externo -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Central de Atendimento</h1>
+    <button id="toggleMode" class="mode-toggle">🌙</button>
+  </header>
+  
+  <!-- Barra de abas – grupo centralizado -->
+  <div id="tabsContainer" class="tabs-container"></div>
+  
+  <!-- Área principal de conteúdo -->
+  <div id="contentContainer" class="content-container">
+    <!-- Tela de Boas-vindas -->
+    <div id="welcomePage" class="card welcome-page animated">
+      <h2>Bem-vindo à Central de Atendimento!</h2>
+      <p>Clique no botão abaixo para começar a trabalhar.</p>
+      <button id="startWorkBtn" class="btn">Começar a trabalhar</button>
+    </div>
+  </div>
+
+  <!-- Mensagem fixa de teste no rodapé -->
+  <div id="testMessage" class="test-message">Apenas tratativa de produtos vencidos configurada até o momento.</div>
+  <div id="testMessage1" class="test-message1">With Love, Hyak. ♡</div>
+  
+  <script>
+    /*************************************************************************************
+     * Fluxo:
+     * 1. Tela de boas-vindas → Criação de ticket (cada ticket em sua aba com formulário)
+     * 2. Após inserir o número do ticket, inicia-se a área de operativa:
+     *    - Inicialmente, o header exibe "Selecione a operativa" e o botão "Problemas com o Pedido".
+     *    - Ao clicar, o header atualiza para "Operativa: Problemas com o Pedido" e as opções de tratativa
+     *      aparecem com animação.
+     * 3. Na tela de tratativas, ao selecionar uma opção:
+     *    - Se for a configurada (data-option="4"), o fluxo de passos inicia com animação.
+     *    - Para as demais, exibe "Tratativa não configurada." e finaliza o ticket (com animação de fade-out/in no bloco final).
+     * 4. Quando um passo final (isFinal: true) é alcançado, o último passo permanece visível e, abaixo, um bloco
+     *    final (com fade‑in) é acrescentado exibindo, à esquerda, o botão "Fechar Ticket" e, à direita, a mensagem
+     *    "Ticket <b>[número]</b> finalizado em: [data/hora]".
+     * 5. Ao fechar o ticket, é aplicado um fade-out antes da remoção do conteúdo.
+     *************************************************************************************/
+    
+    document.addEventListener("DOMContentLoaded", function(){
+      showWelcomePage();
+      document.getElementById("toggleMode").addEventListener("click", toggleTheme);
+    });
+    
+    function toggleTheme(){
+      document.body.classList.toggle("dark-mode");
+      document.getElementById("toggleMode").innerText =
+        document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+    }
+    
+    // Exibe a tela de boas-vindas com animação
+    function showWelcomePage(){
+      const contentContainer = document.getElementById("contentContainer");
+      contentContainer.innerHTML = `
+        <div id="welcomePage" class="card welcome-page animated">
+          <h2>Bem-vindo à Central de Atendimento!</h2>
+          <p>Clique no botão abaixo para começar a trabalhar.</p>
+          <button id="startWorkBtn" class="btn">Começar a trabalhar</button>
+        </div>`;
+      document.getElementById("tabsContainer").innerHTML = "";
+      document.getElementById("startWorkBtn").addEventListener("click", createTicket);
+    }
+    
+    let ticketCounter = 0;
+    let tickets = {};
+    
+    // Cria um novo ticket (aba) e não remove os anteriores.
+    function createTicket(){
+      ticketCounter++;
+      const ticketId = "ticket-" + ticketCounter;
+      const contentContainer = document.getElementById("contentContainer");
+      
+      // Se estiver na tela de boas-vindas, limpa e configura as abas
+      if(document.getElementById("welcomePage")){
+        contentContainer.innerHTML = "";
+        document.getElementById("tabsContainer").innerHTML = "";
+        addPlusButton();
+      }
+      
+      // Cria o cartão do ticket com o formulário (adiciona classe "animated")
+      const ticketCard = document.createElement("div");
+      ticketCard.className = "ticket-tab card animated";
+      ticketCard.id = ticketId;
+      ticketCard.innerHTML = `
+        <div class="ticket-form">
+          <p class="ticket-label">Informe o número do ticket:</p>
+          <input type="text" id="ticketInput-${ticketId}" class="ticket-code" maxlength="10" placeholder="Ex: 123456">
+          <button class="btn" id="ticketSubmit-${ticketId}">Confirmar</button>
+        </div>`;
+      contentContainer.appendChild(ticketCard);
+      
+      // Cria a aba correspondente com animação
+      const tabHeader = document.createElement("div");
+      tabHeader.className = "tab animated";
+      tabHeader.id = "header-" + ticketId;
+      tabHeader.innerText = "Novo Ticket";
+      tabHeader.addEventListener("click", () => switchTicket(ticketId));
+      document.getElementById("tabsContainer").insertBefore(tabHeader, document.getElementById("addTab"));
+      
+      tickets[ticketId] = { number: null };
+      switchTicket(ticketId);
+      
+      document.getElementById("ticketSubmit-" + ticketId).addEventListener("click", function(){
+        const num = document.getElementById("ticketInput-" + ticketId).value.trim();
+        if(!num){
+          alert("Informe o número do ticket.");
+          return;
+        }
+        tickets[ticketId].number = num;
+        document.getElementById("header-" + ticketId).innerText = num;
+        // Aplica animação para a transição da tela de operativa.
+        loadOperativeFlow(ticketId);
+      });
+    }
+    
+    // Adiciona o botão "+" à direita do grupo de abas.
+    function addPlusButton(){
+      const tabsContainer = document.getElementById("tabsContainer");
+      const plusBtn = document.createElement("div");
+      plusBtn.id = "addTab";
+      plusBtn.className = "tab add-tab animated";
+      plusBtn.innerText = "+";
+      tabsContainer.appendChild(plusBtn);
+      plusBtn.addEventListener("click", createTicket);
+    }
+    
+    // Alterna entre os tickets, exibindo somente a aba selecionada com fadeIn.
+    function switchTicket(ticketId){
+      const ticketTabs = document.getElementsByClassName("ticket-tab");
+      Array.from(ticketTabs).forEach(div => {
+        div.style.display = "none";
+        div.classList.remove("animated");
+      });
+      const selectedTicket = document.getElementById(ticketId);
+      selectedTicket.style.display = "block";
+      selectedTicket.classList.add("animated");
+      
+      const headers = document.getElementsByClassName("tab");
+      Array.from(headers).forEach(h => { h.classList.remove("active"); });
+      document.getElementById("header-" + ticketId).classList.add("active");
+    }
+    
+    // Finaliza o ticket com animação de fadeOut (aplicada via CSS) e remove-o.
+    function closeTicket(ticketId){
+      const header = document.getElementById("header-" + ticketId);
+      const content = document.getElementById(ticketId);
+      if(header && content){
+        header.classList.add("fadeOut");
+        content.classList.add("fadeOut");
+        // Após o tempo da animação (500ms), remove os elementos.
+        setTimeout(() => {
+          header.remove();
+          content.remove();
+          delete tickets[ticketId];
+          const remaining = document.getElementsByClassName("ticket-tab");
+          if(remaining.length > 0){
+            switchTicket(remaining[0].id);
+          } else {
+            showWelcomePage();
+          }
+        }, 500);
+      }
+    }
+    
+    /************************************************************
+     * FLUXO DA OPERATIVA / TRATATIVA – COMPLETO, COM ANIMAÇÕES
+     ************************************************************/
+    
+    // Tela inicial da operativa: Exibe "Selecione a operativa" e um botão "Problemas com o Pedido"
+    function loadOperativeFlow(ticketId){
+      let ticketDiv = document.getElementById(ticketId);
+      ticketDiv.innerHTML = `
+        <div class="operative-header animated">
+          <span class="current-treatment">Selecione a operativa</span>
+        </div>
+        <div class="operative-initial animated">
+          <button class="btn" id="startOperativaBtn">Problemas com o Pedido</button>
+        </div>`;
+      switchTicket(ticketId);
+      
+      document.getElementById("startOperativaBtn").addEventListener("click", function(){
+        ticketDiv.querySelector(".current-treatment").innerText = "Operativa: Problemas com o Pedido";
+        loadTratativeOptions(ticketId);
+      });
+    }
+    
+    // Exibe as 9 opções de tratativas em coluna com animação.
+    // Se o atendente selecionar a opção configurada (data-option="4"), inicia o fluxo de passos.
+    // Para as demais, exibe "Tratativa não configurada." e finaliza o ticket.
+    function loadTratativeOptions(ticketId){
+      let ticketDiv = document.getElementById(ticketId);
+      ticketDiv.innerHTML = `
+        <div class="operative-header animated">
+          <span class="current-treatment">Selecione a tratativa</span>
+        </div>
+        <div class="options animated">
+          <button class="btn option" data-option="1">Minha bebida veio quente</button>
+          <button class="btn option" data-option="2">Produto danificado, congelado, sabor alterado etc.</button>
+          <button class="btn option" data-option="3">Meus produtos são falsificados</button>
+          <button class="btn option" data-option="4">Meus produtos vieram vencidos</button>
+          <button class="btn option" data-option="5">Meu pedido veio errado</button>
+          <button class="btn option" data-option="6">Faltou produto no meu pedido</button>
+          <button class="btn option" data-option="7">Pedido cancelado e pedido desconsiderado</button>
+          <button class="btn option" data-option="8">Mau atendimento do parceiro</button>
+          <button class="btn option" data-option="9">Pedido Cancelado &gt; Estorno de pedido cancelado</button>
+        </div>
+        <div class="stepContainer animated"></div>`;
+      
+      let optionsDiv = ticketDiv.querySelector(".options");
+      optionsDiv.style.flexDirection = "column";
+      
+      let optionButtons = ticketDiv.querySelectorAll(".option");
+      optionButtons.forEach(function(btn){
+        btn.addEventListener("click", function(){
+          let chosen = btn.innerText;
+          ticketDiv.querySelector(".current-treatment").innerText = "Operativa: " + chosen;
+          optionsDiv.style.display = "none";
+          let selectedOption = btn.getAttribute("data-option");
+          if(selectedOption === "4"){
+            startOperativeSteps(ticketDiv.querySelector(".stepContainer"), ticketId);
+          } else {
+            // Exibe a mensagem "Tratativa não configurada." e finaliza o ticket (com animação)
+            ticketDiv.querySelector(".stepContainer").innerHTML = "<p>Tratativa não configurada.</p>";
+            finalizeTicket(ticketId);
+          }
+        });
+      });
+    }
+    
+    // Função para finalizar automaticamente o ticket para tratativas não configuradas,
+    // adicionando o bloco final com animação.
+    function finalizeTicket(ticketId){
+      let container = document.getElementById(ticketId).querySelector(".stepContainer");
+      if(!container){
+        container = document.createElement("div");
+        container.className = "stepContainer";
+        document.getElementById(ticketId).appendChild(container);
+      }
+      // Não limpa o conteúdo: mantém a mensagem de "Tratativa não configurada."
+      const finalDiv = document.createElement("div");
+      finalDiv.className = "final-container animated";
+      const btnClose = document.createElement("button");
+      btnClose.className = "btn";
+      btnClose.innerText = "Fechar Ticket";
+      btnClose.addEventListener("click", function(){
+        closeTicket(ticketId);
+      });
+      const p = document.createElement("p");
+      p.className = "final-date";
+      const now = new Date();
+      p.innerHTML = `Ticket <b>${tickets[ticketId].number}</b> finalizado em: ${now.toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", hour12:false })}`;
+      finalDiv.style.display = "flex";
+      finalDiv.style.justifyContent = "space-between";
+      finalDiv.style.alignItems = "center";
+      finalDiv.appendChild(btnClose);
+      finalDiv.appendChild(p);
+      container.appendChild(finalDiv);
+    }
+    
+    // Fluxo completo dos passos para a tratativa configurada (opção 4)
+    const steps = [
+      {
+        id: 1,
+        content: `<strong>1. Se apresente e acolha o cliente:</strong><br>
+                  Resposta pré-definida: 1-Apresentação (se atendimento inicial)<br>
+                  Resposta pré-definida: 24-Acolhimento – geral`
+      },
+      {
+        id: 2,
+        content: `<strong>2. Solicite as evidências:</strong><br>
+                  Informe que as evidências dos produtos (vencidos ou com defeito) deverão ser enviadas via vídeo.<br>
+                  Resposta pré-definida: 177 - Solicitação de dados e evidências<br>
+                  <em>Escolha uma opção:</em>`,
+        choices: [
+          { text: "Não possui/deseja enviar evidências", next: "2a" },
+          { text: "Enviou as evidências", next: "2b" }
+        ]
+      },
+      {
+        id: "2a",
+        content: `<strong>2.1 Não enviou evidências:</strong><br>
+                  Ticket finalizado – evidências necessárias para prosseguir.<br>
+                  Resposta pré-definida: 178 - Finalização sem evidências.`,
+        isFinal: true
+      },
+      {
+        id: "2b",
+        content: `<strong>2.2 Evidências enviadas:</strong><br>
+                  Validar as evidências conforme a quantidade mencionada.`
+      },
+      {
+        id: 3,
+        content: `<strong>3. Verifique a ingestão dos produtos:</strong><br>
+                  <em>Escolha uma opção:</em>`,
+        choices: [
+          { text: "Fez a ingestão", next: "3a" },
+          { text: "Não fez a ingestão", next: "3b" }
+        ]
+      },
+      {
+        id: "3a",
+        content: `<strong>3.1 Ingestão realizada:</strong><br>
+                  Escale para Suporte Avançado via T2 Email.<br>
+                  Resposta pré-definida: 10/11 – Transferência para Suporte.<br>
+                  Tabulação: Casos críticos – produtos vencidos.`,
+        isFinal: true
+      },
+      {
+        id: "3b",
+        content: `<strong>3.2 Não ingeriu os produtos:</strong><br>
+                  Prosseguir para o próximo passo.`
+      },
+      {
+        id: 4,
+        content: `<strong>4. Posicione o cliente e contate o PDV:</strong><br>
+                  Resposta pré-definida: 90-Produto &gt; Processo de troca.<br>
+                  Observação: De segunda a sexta, realizar 3 tentativas; de sábado e domingo, 1 tentativa.<br>
+                  <em>Escolha uma opção:</em>`,
+        choices: [
+          { text: "Sucesso com o PDV (Loja resolve)", next: "4a" },
+          { text: "Sem sucesso com o PDV (Loja não atende/resolver)", next: "4b" }
+        ]
+      },
+      {
+        id: "4a",
+        content: `<strong>4.1 Sucesso com o PDV (Loja resolve):</strong><br>
+                  Oriente o cliente conforme o posicionamento da loja.<br>
+                  Resposta pré-definida: 91-Produto &gt; Loja realizará a troca.<br>
+                  Resolver o ticket com: Casos críticos – Meus produtos são falsificados.<br>
+                  Campos: Solicitação de Cupom: Não; Suspeita de fraude: Sim; Tentou contato: Sim.`,
+        isFinal: true
+      },
+      {
+        id: "4b",
+        content: `<strong>4.2 Sem sucesso com o PDV:</strong><br>
+                  (Loja não atendeu ou não irá resolver o problema.)`
+      },
+      {
+        id: 5,
+        content: `<strong>5. Valide a forma de pagamento:</strong><br>
+                  <em>Escolha uma opção:</em>`,
+        choices: [
+          { text: "Pagamento na entrega", next: "5a" },
+          { text: "Pagamento online", next: "5b" }
+        ]
+      },
+      {
+        id: "5a",
+        content: `<strong>5.1 Pagamento na entrega selecionado.</strong><br>
+Operativa: Meus produtos são falsificados<br><br>
+<b>Se o prejuízo for menor que R$65:</b><br>
+Ofertar cupom no valor do prejuízo (não incluso frete).<br>
+Resposta pré-definida: 180 - Cupom de Prejuízo<br><br>
+<b>Se o cliente aceitou o cupom:</b><br>
+Oriente que o cupom foi solicitado.<br>
+Resposta pré-definida: 181 - Cupom solicitado<br>
+Resolver o ticket com: Casos críticos – Meus produtos vieram vencidos.<br>
+Campos: Solicitação de Cupom: Sim; Tipo do cupom: Prejuízo; Valor: Informar; Suspeita: Sim/Não; Tentou contato: Sim; Distribuidor atendeu: Sim.`,
+        isFinal: true
+      },
+      {
+        id: "5b",
+        content: `<strong>5.2 Pagamento online selecionado.</strong><br>
+Operativa: Meus produtos são falsificados<br><br>
+Oriente que o cliente será transferido para o time especializado.<br>
+Escale o ticket para o Suporte Avançado – T2 Email.<br>
+Utilize: Transferência conforme o horário.<br>
+Campos: Solicitação de Cupom: Não; Suspeita: Sim/Não; Tentou contato: Sim; Distribuidor atendeu: Sim/Não; Data de validade: Informar.`,
+        isFinal: true
+      }
+    ];
+    
+    let currentStep = 0;
+    
+    function startOperativeSteps(container, ticketId){
+      currentStep = 0;
+      renderStep();
+      
+      function renderStep(){
+        container.innerHTML = "";
+        let step = steps[currentStep];
+        const div = document.createElement("div");
+        div.className = "step animated";
+        div.innerHTML = step.content;
+        container.appendChild(div);
+        
+        if(step.choices && !step.isFinal){
+          step.choices.forEach(function(choice){
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.innerText = choice.text;
+            btn.addEventListener("click", function(){
+              currentStep = steps.findIndex(s => s.id === choice.next);
+              renderStep();
+            });
+            container.appendChild(btn);
+          });
+        } else if(!step.isFinal){
+          const btnNext = document.createElement("button");
+          btnNext.className = "btn";
+          btnNext.innerText = "Próximo";
+          btnNext.addEventListener("click", function(){
+            currentStep++;
+            renderStep();
+          });
+          container.appendChild(btnNext);
+        }
+        
+        if(step.isFinal){
+          renderFinal();
+        }
+      }
+      
+      function renderFinal(){
+        const finalDiv = document.createElement("div");
+        finalDiv.className = "final-container animated";
+        const btnClose = document.createElement("button");
+        btnClose.className = "btn";
+        btnClose.innerText = "Fechar Ticket";
+        btnClose.addEventListener("click", function(){
+          closeTicket(ticketId);
+        });
+        const p = document.createElement("p");
+        p.className = "final-date";
+        const now = new Date();
+        p.innerHTML = `Ticket <b>${tickets[ticketId].number}</b> finalizado em: ${now.toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", hour12:false })}`;
+        finalDiv.style.display = "flex";
+        finalDiv.style.justifyContent = "space-between";
+        finalDiv.style.alignItems = "center";
+        finalDiv.appendChild(btnClose);
+        finalDiv.appendChild(p);
+        container.appendChild(finalDiv);
+      }
+    }
+  </script>
+</body>
+</html>
