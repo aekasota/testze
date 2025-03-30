@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Central de Atendimento</title>
-  <!-- Fonte Nunito -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
   <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,600;1,600&amp;display=swap" rel="stylesheet">
-  <!-- Link para o CSS externo -->
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,12 +16,12 @@
     <button id="toggleMode" class="mode-toggle">🌙</button>
   </header>
   
-  <!-- Barra de abas – grupo centralizado -->
+
   <div id="tabsContainer" class="tabs-container"></div>
   
-  <!-- Área principal de conteúdo -->
+
   <div id="contentContainer" class="content-container">
-    <!-- Tela de Boas-vindas -->
+
     <div id="welcomePage" class="card welcome-page animated">
       <h2>Bem-vindo à Central de Atendimento!</h2>
       <p>Clique no botão abaixo para começar a trabalhar.</p>
@@ -29,26 +29,11 @@
     </div>
   </div>
 
-  <!-- Mensagem fixa de teste no rodapé -->
+
   <div id="testMessage" class="test-message">Apenas tratativa de produtos vencidos configurada até o momento.</div>
   <div id="testMessage1" class="test-message1">With Love, Hyak. ♡</div>
   
   <script>
-    /*************************************************************************************
-     * Fluxo:
-     * 1. Tela de boas-vindas → Criação de ticket (cada ticket em sua aba com formulário)
-     * 2. Após inserir o número do ticket, inicia-se a área de operativa:
-     *    - Inicialmente, o header exibe "Selecione a operativa" e o botão "Problemas com o Pedido".
-     *    - Ao clicar, o header atualiza para "Operativa: Problemas com o Pedido" e as opções de tratativa
-     *      aparecem com animação.
-     * 3. Na tela de tratativas, ao selecionar uma opção:
-     *    - Se for a configurada (data-option="4"), o fluxo de passos inicia com animação.
-     *    - Para as demais, exibe "Tratativa não configurada." e finaliza o ticket (com animação de fade-out/in no bloco final).
-     * 4. Quando um passo final (isFinal: true) é alcançado, o último passo permanece visível e, abaixo, um bloco
-     *    final (com fade‑in) é acrescentado exibindo, à esquerda, o botão "Fechar Ticket" e, à direita, a mensagem
-     *    "Ticket <b>[número]</b> finalizado em: [data/hora]".
-     * 5. Ao fechar o ticket, é aplicado um fade-out antes da remoção do conteúdo.
-     *************************************************************************************/
     
     document.addEventListener("DOMContentLoaded", function(){
       showWelcomePage();
@@ -61,7 +46,6 @@
         document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
     }
     
-    // Exibe a tela de boas-vindas com animação
     function showWelcomePage(){
       const contentContainer = document.getElementById("contentContainer");
       contentContainer.innerHTML = `
@@ -77,20 +61,19 @@
     let ticketCounter = 0;
     let tickets = {};
     
-    // Cria um novo ticket (aba) e não remove os anteriores.
+
     function createTicket(){
       ticketCounter++;
       const ticketId = "ticket-" + ticketCounter;
       const contentContainer = document.getElementById("contentContainer");
       
-      // Se estiver na tela de boas-vindas, limpa e configura as abas
+
       if(document.getElementById("welcomePage")){
         contentContainer.innerHTML = "";
         document.getElementById("tabsContainer").innerHTML = "";
         addPlusButton();
       }
       
-      // Cria o cartão do ticket com o formulário (adiciona classe "animated")
       const ticketCard = document.createElement("div");
       ticketCard.className = "ticket-tab card animated";
       ticketCard.id = ticketId;
@@ -102,7 +85,7 @@
         </div>`;
       contentContainer.appendChild(ticketCard);
       
-      // Cria a aba correspondente com animação
+
       const tabHeader = document.createElement("div");
       tabHeader.className = "tab animated";
       tabHeader.id = "header-" + ticketId;
@@ -121,12 +104,12 @@
         }
         tickets[ticketId].number = num;
         document.getElementById("header-" + ticketId).innerText = num;
-        // Aplica animação para a transição da tela de operativa.
+
         loadOperativeFlow(ticketId);
       });
     }
     
-    // Adiciona o botão "+" à direita do grupo de abas.
+
     function addPlusButton(){
       const tabsContainer = document.getElementById("tabsContainer");
       const plusBtn = document.createElement("div");
@@ -137,7 +120,7 @@
       plusBtn.addEventListener("click", createTicket);
     }
     
-    // Alterna entre os tickets, exibindo somente a aba selecionada com fadeIn.
+
     function switchTicket(ticketId){
       const ticketTabs = document.getElementsByClassName("ticket-tab");
       Array.from(ticketTabs).forEach(div => {
@@ -153,14 +136,14 @@
       document.getElementById("header-" + ticketId).classList.add("active");
     }
     
-    // Finaliza o ticket com animação de fadeOut (aplicada via CSS) e remove-o.
+
     function closeTicket(ticketId){
       const header = document.getElementById("header-" + ticketId);
       const content = document.getElementById(ticketId);
       if(header && content){
         header.classList.add("fadeOut");
         content.classList.add("fadeOut");
-        // Após o tempo da animação (500ms), remove os elementos.
+
         setTimeout(() => {
           header.remove();
           content.remove();
@@ -175,11 +158,7 @@
       }
     }
     
-    /************************************************************
-     * FLUXO DA OPERATIVA / TRATATIVA – COMPLETO, COM ANIMAÇÕES
-     ************************************************************/
-    
-    // Tela inicial da operativa: Exibe "Selecione a operativa" e um botão "Problemas com o Pedido"
+
     function loadOperativeFlow(ticketId){
       let ticketDiv = document.getElementById(ticketId);
       ticketDiv.innerHTML = `
@@ -196,10 +175,7 @@
         loadTratativeOptions(ticketId);
       });
     }
-    
-    // Exibe as 9 opções de tratativas em coluna com animação.
-    // Se o atendente selecionar a opção configurada (data-option="4"), inicia o fluxo de passos.
-    // Para as demais, exibe "Tratativa não configurada." e finaliza o ticket.
+
     function loadTratativeOptions(ticketId){
       let ticketDiv = document.getElementById(ticketId);
       ticketDiv.innerHTML = `
@@ -232,16 +208,14 @@
           if(selectedOption === "4"){
             startOperativeSteps(ticketDiv.querySelector(".stepContainer"), ticketId);
           } else {
-            // Exibe a mensagem "Tratativa não configurada." e finaliza o ticket (com animação)
+
             ticketDiv.querySelector(".stepContainer").innerHTML = "<p>Tratativa não configurada.</p>";
             finalizeTicket(ticketId);
           }
         });
       });
     }
-    
-    // Função para finalizar automaticamente o ticket para tratativas não configuradas,
-    // adicionando o bloco final com animação.
+
     function finalizeTicket(ticketId){
       let container = document.getElementById(ticketId).querySelector(".stepContainer");
       if(!container){
@@ -249,7 +223,7 @@
         container.className = "stepContainer";
         document.getElementById(ticketId).appendChild(container);
       }
-      // Não limpa o conteúdo: mantém a mensagem de "Tratativa não configurada."
+
       const finalDiv = document.createElement("div");
       finalDiv.className = "final-container animated";
       const btnClose = document.createElement("button");
@@ -270,7 +244,7 @@
       container.appendChild(finalDiv);
     }
     
-    // Fluxo completo dos passos para a tratativa configurada (opção 4)
+
     const steps = [
       {
         id: 1,
