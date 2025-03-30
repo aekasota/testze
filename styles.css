@@ -1,7 +1,7 @@
-/* Embed da fonte Nunito */
+
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,600;1,600&display=swap');
 
-/* Animação de Fade In */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -16,7 +16,7 @@
   animation: fadeIn 0.5s ease forwards;
 }
 
-/* Animação de Fade Out */
+
 @keyframes fadeOut {
   from {
     opacity: 1;
@@ -31,12 +31,12 @@
   animation: fadeOut 0.5s ease forwards;
 }
 
-/* Força que elementos com .hidden não apareçam */
+
 .hidden {
   display: none !important;
 }
 
-/* Estilizações Globais */
+
 body {
   font-family: 'Nunito', sans-serif;
   background-color: #f7f7f7;
@@ -46,7 +46,7 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Modo Escuro */
+
 .dark-mode {
   background-color: #121212;
   color: #e0e0e0;
@@ -58,14 +58,14 @@ body {
 .dark-mode .btn {
   box-shadow: 0 2px 4px rgba(255,255,255,0.1);
 }
-/* Ajuste nos passos para dark mode para garantir boa legibilidade */
+
 .dark-mode .step {
   background-color: #2a2a2a;
   color: #fff;
   border-left-color: #ffcc00;
 }
 
-/* Cabeçalho */
+
 header {
   position: relative;
   text-align: center;
@@ -85,7 +85,7 @@ header h1 {
   cursor: pointer;
 }
 
-/* Cards para Welcome, Ticket e Operativa */
+
 .card {
   background-color: #fff;
   max-width: 500px;
@@ -110,7 +110,7 @@ header h1 {
   outline: none;
 }
 
-/* Barra de Abas – CENTRALIZADA */
+
 .tabs-container {
   display: inline-flex;
   justify-content: center;
@@ -135,7 +135,6 @@ header h1 {
 .tab.active { background-color: #e6b800; font-weight: bold; }
 .dark-mode .tab { background-color: #333; color: #fff; border-color: #ffcc00; }
 .dark-mode .tab.active { background-color: #555; }
-/* O botão "+" fica junto das abas sem margem extra */
 .add-tab {
   background-color: #fff;
   border: 2px dashed #ffcc00;
@@ -147,7 +146,7 @@ header h1 {
 .add-tab:hover { background-color: #f0f0f0; }
 .dark-mode .add-tab { background-color: #222; border-color: #ffcc00; color: #fff; }
 
-/* Área de Conteúdo – cada Ticket */
+
 .content-container { min-height: 300px; }
 .ticket-tab {
   display: none;
@@ -157,7 +156,7 @@ header h1 {
   margin: 0 auto 20px;
 }
 
-/* Área da Operativa */
+
 .operative { padding: 20px; }
 .operative-header {
   display: flex;
@@ -181,7 +180,7 @@ header h1 {
 .stepContainer { margin-top: 20px; }
 .tratativa-footer { text-align: center; margin-top: 20px; }
 
-/* Botões Gerais */
+
 .btn {
   background-color: #ffcc00;
   border: 1px solid #ffcc00;
@@ -200,7 +199,7 @@ header h1 {
 .btn:active { transform: scale(0.98); }
 .btn.btn-secondary { background-color: #ccc; color: #333; }
 
-/* Passos da Operativa */
+
 .step {
   background-color: #f7f7f7;
   border-left: 4px solid #ffcc00;
@@ -215,7 +214,7 @@ header h1 {
   border-left-color: #ffcc00;
 }
 
-/* Finalização do Ticket */
+
 .final-container {
   display: flex;
   flex-wrap: wrap;
@@ -229,14 +228,14 @@ header h1 {
 .final-date { font-size: 0.9rem; color: #555; }
 .dark-mode .final-date { color1: #ccc; }
 
-/* Iframe (não utilizado nesta versão integrada) */
+
 .operativa-iframe {
   border: none;
   width: 100%;
   height: 500px;
 }
 
-/* Mensagem fixa de teste no rodapé */
+
 .test-message {
   position: fixed;
   bottom: 30px;
